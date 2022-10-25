@@ -2,7 +2,6 @@ import json
 
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
-from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView
 
@@ -10,12 +9,14 @@ from ads.models import Category
 
 
 class CatListView(ListView):
+    model = Category
 
     def get(self, request, *args, **kwargs):
         super().get(request, *args, **kwargs)
+        cat = self.object_list.order_by('name')
 
         response = []
-        for category in self.object_list:
+        for category in cat:
             response.append(
                 {
                     'id': category.id,
@@ -44,6 +45,8 @@ class CatDetailView(DetailView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CatCreateView(CreateView):
+    model = Category
+    fields = ['name']
 
     def post(self, request, *args, **kwargs):
         category_data = json.loads(request.body)
@@ -69,22 +72,12 @@ class CatUpdateView(UpdateView):
         ad_data = json.loads(request.body)
 
         self.object.name = ad_data['name']
-        self.object.author = ad_data['author']
-        self.object.price = ad_data['price']
-        self.object.description = ad_data['description']
-        self.object.images = ad_data['images']
-        self.object.category = ad_data['category']
 
         self.object.save()
 
         return JsonResponse(
             {
                 'name': self.object.name,
-                'author': self.object.author,
-                'price': self.object.price,
-                'description': self.object.description,
-                'images': self.object.images,
-                'category': self.object.category,
             }
         )
 

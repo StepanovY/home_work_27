@@ -21,7 +21,9 @@ from home_work_27 import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('ads/', include('ads.urls.ad_urls')),
+    path('ad/', include('ads.urls.ad_urls')),
+    path('cat/', include('ads.urls.cat_urls')),
+    path('user/', include('users.urls.user_urls')),
 
 ]
 

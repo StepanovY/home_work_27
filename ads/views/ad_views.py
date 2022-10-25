@@ -1,5 +1,6 @@
 import json
 
+from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
@@ -7,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView
 
 from ads.models import Ad, Category
+from home_work_27.settings import TOTAL_ON_PAGE
 from users.models import User
 
 
@@ -15,21 +17,27 @@ class AdListView(ListView):
 
     def get(self, request, *args, **kwargs):
         super().get(request, *args, **kwargs)
-        ads = self.object_list.all()
+        self.object_list = self.object_list.order_by('-price')
 
-        response = []
-        for ad in ads:
-            response.append(
-                {
-                    'id': ad.id,
-                    'name': ad.name,
-                    'author': ad.author.first_name,
-                    'price': ad.price,
-                    'description': ad.description,
-                    'image': ad.image.url if ad.image else None,
-                    'category': ad.category.name,
-                }
-            )
+        paginator = Paginator(self.object_list, TOTAL_ON_PAGE)
+        page = request.GET.get('page')
+        obj = paginator.get_page(page)
+        response = {}
+        items_list = [{
+            'id': ad.id,
+            'name': ad.name,
+            'author': ad.author.first_name,
+            'price': ad.price,
+            'description': ad.description,
+            'is_published': ad.is_published,
+            'image': ad.image.url if ad.image else None,
+            'category': ad.category.name,
+        } for ad in obj]
+        response['items'] = items_list
+        response['total'] = self.object_list.count()
+        response['nam_pages'] = paginator.num_pages
+        response['page'] = page
+
         return JsonResponse(response, safe=False)
 
 
@@ -52,7 +60,7 @@ class AdDetailView(DetailView):
                 'image': ad.image.url if ad.image else None,
                 'category_id': ad.category.name,
 
-            }
+            }, safe=False
         )
 
 
@@ -127,3 +135,24 @@ class AdDeleteView(DeleteView):
         super().delete(request, *args, **kwargs)
 
         return JsonResponse({'status': 'OK'}, status=204)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AdImageView(UpdateView):
+    model = Ad
+    fields = ['name', 'image']
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        self.object.image = request.FILES.get('image')
+        self.object.save()
+
+        return JsonResponse(
+            {
+                'id': self.object.pk,
+                'name': self.object.name,
+                'image': self.object.image.url if self.object.image else None,
+
+            }, safe=False
+        )
