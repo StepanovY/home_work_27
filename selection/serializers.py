@@ -3,6 +3,7 @@ from rest_framework import serializers
 from ads.models import Ad
 from ads.serializers import AdListSerializer
 from selection.models import Selection
+from users.models import User
 
 
 class SelectionListSerializer(serializers.ModelSerializer):
