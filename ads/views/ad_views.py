@@ -3,14 +3,17 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import UpdateView
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, UpdateAPIView, DestroyAPIView
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from ads.models import Ad
+from ads.permissions import AdUpdatePermission
 from ads.serializers import AdListSerializer, AdCreateSerializer, AdUpdateSerializer, AdDestroySerializer
 
 
 class AdListView(ListAPIView):
     queryset = Ad.objects.order_by('-price')
     serializer_class = AdListSerializer
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         category = request.GET.getlist('cat_id', [])
@@ -44,6 +47,7 @@ class AdListView(ListAPIView):
 class AdDetailView(RetrieveAPIView):
     queryset = Ad.objects.all()
     serializer_class = AdListSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class AdCreateView(CreateAPIView):
@@ -54,11 +58,13 @@ class AdCreateView(CreateAPIView):
 class AdUpdateView(UpdateAPIView):
     queryset = Ad.objects.all()
     serializer_class = AdUpdateSerializer
+    permission_classes = [AdUpdatePermission]
 
 
 class AdDeleteView(DestroyAPIView):
     queryset = Ad.objects.all()
     serializer_class = AdDestroySerializer
+    permission_classes = [AdUpdatePermission]
 
 
 @method_decorator(csrf_exempt, name='dispatch')

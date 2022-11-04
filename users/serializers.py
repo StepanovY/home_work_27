@@ -8,10 +8,14 @@ class UserListSerializer(serializers.ModelSerializer):
     сериализатор вывода списка всех и только одной по id
     """
     location = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
+    total_ads = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = '__all__'
+
+    def get_total_ads(self, user):
+        return user.ads.filter(is_published=True).count()
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -33,6 +37,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = User.objects.create(**validated_data)
+
+        user.set_password(validated_data['password'])
 
         for location in self._location:
             loc, _ = Location.objects.get_or_create(name=location)
