@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from ads.models import Ad, Category
+from ads.validators import not_published
 from users.models import User
 
 
@@ -18,6 +19,7 @@ class AdListSerializer(serializers.ModelSerializer):
 
 class AdCreateSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
+    is_published = serializers.BooleanField(validators=[not_published])
     author = serializers.SlugRelatedField(
         required=False,
         queryset=User.objects.all(),

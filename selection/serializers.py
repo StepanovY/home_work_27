@@ -32,7 +32,6 @@ class SelectionCreateSerializer(serializers.ModelSerializer):
         queryset=User.objects.all(),
         slug_field='id'
     )
-    # author = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Selection
